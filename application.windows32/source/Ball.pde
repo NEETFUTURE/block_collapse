@@ -38,11 +38,18 @@ class Ball {
     posi = box2d.getBodyPixelCoord(body);
     // Get its angle of rotation
     float a = body.getAngle();
-
-    stroke(0,0,0);
+    pushMatrix();
+    translate(posi.x, posi.y);
+    rotate(a);
+    
+    stroke(0);
     strokeWeight(1);
-    fill(0,0,255);
-    ellipse(posi.x, posi.y, r*2, r*2);
+    fill(0,255,0);
+    ellipse(0,0,r*2, r*2);
+    // Let's add a line so we can see the rotation
+    fill(255,255,0);
+    line(0, 0, r, 0);
+    popMatrix();
     return posi;
   }
   
@@ -63,7 +70,7 @@ class Ball {
     fd.shape = cs;
     // Parameters that affect physics
     fd.density = 1.0;
-    fd.friction = 0.0;
+    fd.friction = 3.0;
     fd.restitution = 1.0;
 
     // Attach fixture to body

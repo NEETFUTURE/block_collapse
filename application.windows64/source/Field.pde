@@ -11,7 +11,14 @@ class Field {
               j,
               1
           );
-        }else{
+        }else if(j>=1 && j<= DIVY-8){
+          blocks[i][j] = new Block(
+              i,
+              j,
+              2
+          );
+        }
+        else{
           blocks[i][j] = null;
         }
       }
@@ -27,6 +34,23 @@ class Field {
   
   }
   
+  void rebuild(){
+    int i,j;
+    for(i=0;i<DIVX;i++){
+      for(j=0;j<DIVY;j++){
+        if(j>=1 && j<= DIVY-8 && 
+            blocks[i][j]==null){
+          blocks[i][j] = new Block(
+              i,
+              j,
+              2
+          );
+        }
+        
+      }
+    }
+  }
+  
   void display() {
     int i,j;
     
@@ -35,6 +59,14 @@ class Field {
     stroke(0,0,0);
     strokeWeight(3);
     rectMode(CORNER);
+    
+    if (zanki == 3){
+      fill(0,100,255);
+    }else if (zanki == 2) {
+      fill(100,255,0);
+    }else{
+      fill(255,0,0);
+    }
     
     for (i=0;i<DIVX;i++){
       for (j=0;j<DIVY;j++){

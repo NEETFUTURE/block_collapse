@@ -32,11 +32,11 @@ public class block_collapse extends PApplet {
 
 
 
-boolean space, r, left, right;
+boolean space, r, left, right,s;
 
 int W = 800;
 int H = 800;
-float BARSPEED = W/50;
+float BARSPEED = W/25;
 float Y = H*(1-0.05f);
 int DIV = 16;
 int MARGIN = 3;
@@ -45,8 +45,11 @@ int DIVY = DIV;
 float CX = W/DIV;
 float CY = H/DIV;
 float JUMPSPD = 30;
+int score = 0;
 
 Vec2 posi;
+boolean gamestate;
+int zanki;
 
 boolean toggle = false;
 int x = W/2;
@@ -59,15 +62,15 @@ Box2DProcessing box2d;
 
 
 public void setup() {
-  size(W+1,H+1);
-  smooth();
+  
+  
   colorMode(RGB,100);
   rectMode(CENTER);
   
   // Initialize box2d physics and create the world
   box2d = new Box2DProcessing(this);
   box2d.createWorld();
-  box2d.setGravity(0, 0.1f);
+  box2d.setGravity(0, -0.5f);
 
   // Turn on collision listening!
   box2d.listenForCollisions();
@@ -78,12 +81,18 @@ public void setup() {
   wall2 = new Wall(CX*(DIV-MARGIN+0.5f),H/2);
   
   bar = new Bar((float)W/2,H*(1-0.05f),(float)W/5.0f,(float)H/50.0f);
+  gameset();
   
   // debug
   
   posi = new Vec2((float)W/10.0f,(float)H/50.0f);
 }
 
+public void gameset(){
+  gamestate = true;
+  zanki = 3;
+  score = 0;
+}
 
 public void draw() {
   flip();
@@ -113,32 +122,60 @@ public void draw() {
   }
   
   if(keyPressed){
-     if(r == true && ball==null){
+     if(r == true && ball==null && gamestate == true){
        Vec2 a = bar.getpos();
-       ball = new Ball(a.x,a.y-CY,20);
+       ball = new Ball(a.x,a.y-CY,13);
+     }
+     if(s==true && gamestate == false){
+       zanki = 3;
+       gamestate = true;
+       gameset();
+       fld.rebuild();
      }
   }
   if(ball!=null && ball.islost() == true){
     ball = null;
+    zanki--;
   }
   
   
   fill(0);
   
-  drawlines();
+  //drawlines();
   fld.display();
   
   if(ball!=null)posi = ball.display();
-  dispdata();
+  
   fill(0);
   bar.moving();
   bar.display();
   wall1.display();
   wall2.display();
   //rect(x,H*(1-0.05),W/10,H/50);
+  
+  if(zanki==0){
+    gamestate = false;
+  }
+  if(gamestate == false){
+       textSize(90);
+       textAlign(CENTER);
+       text("GAME OVER",W/2,H/4);
+       textSize(70);
+       text("PUSH 'S' KEY",W/2,2*H/3-50);
+       text("TO RESTART",W/2,2*H/3);
+     }
+  textAlign(RIGHT);
+  textSize(20);
+  text("LIFE: " + zanki,CX+20,H/2);
+  text("SCORE: " + score,CX+40,H/2+25);
+  //textAlign(LEFT);
+  //textSize(15);
+  //dispdata();
+
 }
 
 public void mouseClicked() {
+    
     fld.click();
 } 
 
@@ -165,7 +202,7 @@ public void drawlines() {
 }
 
 public void dispdata() {
-  text("FPS: "+frameRate + "  X: "+mouseX+"  Y: "+mouseY + "  toggle: "+toggle+" ballX: "+ posi.x+" ballY: "+posi.y,10,H-10);
+  text("  X: "+mouseX+"  Y: "+mouseY + "  toggle: "+toggle+" ballX: "+ posi.x+" ballY: "+posi.y,10,H-10);
 }
 
 
@@ -191,6 +228,9 @@ public void keyPressed() {
     case 'r':
       r = true;
       break;
+    case 's':
+      s = true;
+      break;
   }
   switch(keyCode) {
     case LEFT:
@@ -209,6 +249,9 @@ public void keyReleased() {
       break;
     case 'r':
       r = false;
+      break;
+    case 's':
+      s = false;
       break;
   }
   switch(keyCode) {
@@ -236,12 +279,14 @@ public void endContact(Contact cp) {
 
   if (o1.getClass() == Ball.class && o2.getClass() == Block.class) {
     Block p2 = (Block) o2;
+    score++;
     if(p2.typ == 2){
       //p2.killBody();
       fld.blocks[p2.i][p2.j].typ=0;
     }
   }else if (o2.getClass() == Ball.class && o1.getClass() == Block.class) {
     Block p1 = (Block) o1;
+    score++;
     if(p1.typ == 2){
       //p1.killBody();
       fld.blocks[p1.i][p1.j].typ=0;
@@ -257,8 +302,6 @@ public void endContact(Contact cp) {
     else if(right == true) {p2.force(-100.0f);}
   }
 }
-
-
 class Ball {
   float r;
 
@@ -299,11 +342,18 @@ class Ball {
     posi = box2d.getBodyPixelCoord(body);
     // Get its angle of rotation
     float a = body.getAngle();
-
-    stroke(0,0,0);
+    pushMatrix();
+    translate(posi.x, posi.y);
+    rotate(a);
+    
+    stroke(0);
     strokeWeight(1);
-    fill(0,0,255);
-    ellipse(posi.x, posi.y, r*2, r*2);
+    fill(0,255,0);
+    ellipse(0,0,r*2, r*2);
+    // Let's add a line so we can see the rotation
+    fill(255,255,0);
+    line(0, 0, r, 0);
+    popMatrix();
     return posi;
   }
   
@@ -324,7 +374,7 @@ class Ball {
     fd.shape = cs;
     // Parameters that affect physics
     fd.density = 1.0f;
-    fd.friction = 0.0f;
+    fd.friction = 3.0f;
     fd.restitution = 1.0f;
 
     // Attach fixture to body
@@ -374,7 +424,7 @@ class Bar {
     fd.shape = sd;
     // Parameters that affect physics
     fd.density = 1.0f;
-    fd.friction = 0.0f;
+    fd.friction = 1.0f;
     fd.restitution = 1.0f;
     
     // Attached the shape to the body using a Fixture
@@ -506,7 +556,14 @@ class Field {
               j,
               1
           );
-        }else{
+        }else if(j>=1 && j<= DIVY-8){
+          blocks[i][j] = new Block(
+              i,
+              j,
+              2
+          );
+        }
+        else{
           blocks[i][j] = null;
         }
       }
@@ -522,6 +579,23 @@ class Field {
   
   }
   
+  public void rebuild(){
+    int i,j;
+    for(i=0;i<DIVX;i++){
+      for(j=0;j<DIVY;j++){
+        if(j>=1 && j<= DIVY-8 && 
+            blocks[i][j]==null){
+          blocks[i][j] = new Block(
+              i,
+              j,
+              2
+          );
+        }
+        
+      }
+    }
+  }
+  
   public void display() {
     int i,j;
     
@@ -530,6 +604,14 @@ class Field {
     stroke(0,0,0);
     strokeWeight(3);
     rectMode(CORNER);
+    
+    if (zanki == 3){
+      fill(0,100,255);
+    }else if (zanki == 2) {
+      fill(100,255,0);
+    }else{
+      fill(255,0,0);
+    }
     
     for (i=0;i<DIVX;i++){
       for (j=0;j<DIVY;j++){
@@ -608,8 +690,9 @@ class Wall {
   // Draw the boundary, if it were at an angle we'd have to do something fancier
 
 }
+  public void settings() {  size(801,801);  smooth(); }
   static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "--full-screen", "--bgcolor=#666666", "--stop-color=#cccccc", "block_collapse" };
+    String[] appletArgs = new String[] { "block_collapse" };
     if (passedArgs != null) {
       PApplet.main(concat(appletArgs, passedArgs));
     } else {

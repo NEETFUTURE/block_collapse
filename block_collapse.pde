@@ -37,7 +37,7 @@ Box2DProcessing box2d;
 
 
 void setup() {
-  size(W+1,H+1);
+  size(801,801);
   smooth();
   colorMode(RGB,100);
   rectMode(CENTER);
@@ -277,5 +277,3 @@ void endContact(Contact cp) {
     else if(right == true) {p2.force(-100.0);}
   }
 }
-
-

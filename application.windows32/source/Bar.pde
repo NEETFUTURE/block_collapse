@@ -39,7 +39,7 @@ class Bar {
     fd.shape = sd;
     // Parameters that affect physics
     fd.density = 1.0;
-    fd.friction = 0.0;
+    fd.friction = 1.0;
     fd.restitution = 1.0;
     
     // Attached the shape to the body using a Fixture

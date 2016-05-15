@@ -7,11 +7,11 @@ import org.jbox2d.common.*;
 import org.jbox2d.dynamics.*;
 import org.jbox2d.dynamics.contacts.*;
 
-boolean space, r, left, right;
+boolean space, r, left, right,s;
 
 int W = 800;
 int H = 800;
-float BARSPEED = W/50;
+float BARSPEED = W/25;
 float Y = H*(1-0.05);
 int DIV = 16;
 int MARGIN = 3;
@@ -20,8 +20,11 @@ int DIVY = DIV;
 float CX = W/DIV;
 float CY = H/DIV;
 float JUMPSPD = 30;
+int score = 0;
 
 Vec2 posi;
+boolean gamestate;
+int zanki;
 
 boolean toggle = false;
 int x = W/2;
@@ -34,7 +37,7 @@ Box2DProcessing box2d;
 
 
 void setup() {
-  size(W+1,H+1);
+  size(801,801);
   smooth();
   colorMode(RGB,100);
   rectMode(CENTER);
@@ -42,7 +45,7 @@ void setup() {
   // Initialize box2d physics and create the world
   box2d = new Box2DProcessing(this);
   box2d.createWorld();
-  box2d.setGravity(0, 0.1);
+  box2d.setGravity(0, -0.5);
 
   // Turn on collision listening!
   box2d.listenForCollisions();
@@ -53,12 +56,18 @@ void setup() {
   wall2 = new Wall(CX*(DIV-MARGIN+0.5),H/2);
   
   bar = new Bar((float)W/2,H*(1-0.05),(float)W/5.0,(float)H/50.0);
+  gameset();
   
   // debug
   
   posi = new Vec2((float)W/10.0,(float)H/50.0);
 }
 
+void gameset(){
+  gamestate = true;
+  zanki = 3;
+  score = 0;
+}
 
 void draw() {
   flip();
@@ -88,32 +97,60 @@ void draw() {
   }
   
   if(keyPressed){
-     if(r == true && ball==null){
+     if(r == true && ball==null && gamestate == true){
        Vec2 a = bar.getpos();
-       ball = new Ball(a.x,a.y-CY,20);
+       ball = new Ball(a.x,a.y-CY,13);
+     }
+     if(s==true && gamestate == false){
+       zanki = 3;
+       gamestate = true;
+       gameset();
+       fld.rebuild();
      }
   }
   if(ball!=null && ball.islost() == true){
     ball = null;
+    zanki--;
   }
   
   
   fill(0);
   
-  drawlines();
+  //drawlines();
   fld.display();
   
   if(ball!=null)posi = ball.display();
-  dispdata();
+  
   fill(0);
   bar.moving();
   bar.display();
   wall1.display();
   wall2.display();
   //rect(x,H*(1-0.05),W/10,H/50);
+  
+  if(zanki==0){
+    gamestate = false;
+  }
+  if(gamestate == false){
+       textSize(90);
+       textAlign(CENTER);
+       text("GAME OVER",W/2,H/4);
+       textSize(70);
+       text("PUSH 'S' KEY",W/2,2*H/3-50);
+       text("TO RESTART",W/2,2*H/3);
+     }
+  textAlign(RIGHT);
+  textSize(20);
+  text("LIFE: " + zanki,CX+20,H/2);
+  text("SCORE: " + score,CX+40,H/2+25);
+  //textAlign(LEFT);
+  //textSize(15);
+  //dispdata();
+
 }
 
 void mouseClicked() {
+    
     fld.click();
 } 
 
@@ -140,7 +177,7 @@ void drawlines() {
 }
 
 void dispdata() {
-  text("FPS: "+frameRate + "  X: "+mouseX+"  Y: "+mouseY + "  toggle: "+toggle+" ballX: "+ posi.x+" ballY: "+posi.y,10,H-10);
+  text("  X: "+mouseX+"  Y: "+mouseY + "  toggle: "+toggle+" ballX: "+ posi.x+" ballY: "+posi.y,10,H-10);
 }
 
 
@@ -166,6 +203,9 @@ void keyPressed() {
     case 'r':
       r = true;
       break;
+    case 's':
+      s = true;
+      break;
   }
   switch(keyCode) {
     case LEFT:
@@ -184,6 +224,9 @@ void keyReleased() {
       break;
     case 'r':
       r = false;
+      break;
+    case 's':
+      s = false;
       break;
   }
   switch(keyCode) {
@@ -211,12 +254,14 @@ void endContact(Contact cp) {
 
   if (o1.getClass() == Ball.class && o2.getClass() == Block.class) {
     Block p2 = (Block) o2;
+    score++;
     if(p2.typ == 2){
       //p2.killBody();
       fld.blocks[p2.i][p2.j].typ=0;
     }
   }else if (o2.getClass() == Ball.class && o1.getClass() == Block.class) {
     Block p1 = (Block) o1;
+    score++;
     if(p1.typ == 2){
       //p1.killBody();
       fld.blocks[p1.i][p1.j].typ=0;
@@ -232,5 +277,3 @@ void endContact(Contact cp) {
     else if(right == true) {p2.force(-100.0);}
   }
 }
-
-
